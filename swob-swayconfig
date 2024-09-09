@@ -1,0 +1,5 @@
+bindsym XF86MonBrightnessDown	exec swob.sh brightness 5%-
+bindsym XF86MonBrightnessUp	exec swob.sh brightness 5%+
+bindsym XF86AudioLowerVolume	exec swob.sh volume 5%-
+bindsym XF86AudioRaiseVolume	exec swob.sh volume 5%+
+bindsym XF86AudioMute		exec swob.sh volume toggle
