@@ -28,19 +28,22 @@ Dependencies
 Installation
 ------------
 
-Put swob.sh on your PATH, or edit the sway(5) config snippet to point to its
-exact location. Copy the sway config snippet into your own sway config file,
-or source it from that file, or copy it into /etc/sway/config.d -- obviously
-if you aren't on sway, do the equivalent for your window manager.
+- Put swob.sh on your PATH, or edit the sway(5) config snippet to point to its
+  exact location.
+- Copy the sway config snippet into your own sway config file, or source it
+  from that file, or copy it into /etc/sway/config.d -- obviously if you
+  aren't on sway, do the equivalent for your window manager.
+- Copy swob-wob.ini to one of: `$XDG_CONFIG_DIR`/swob/wob.ini,
+  ~/.config/swob/wob.ini, /etc/swob/wob.ini
 
 Copying
 -------
 
 Copyright &copy; 2024 The Remph <lhr@disroot.org>
 
-This file is free software; the Remph gives unlimited permission to copy
-and/or distribute it, with or without modification, as long as this
-notice is preserved.
+These files are free software; the Remph gives unlimited permission to copy
+and/or distribute them, with or without modification, as long as this notice
+is preserved.
 
 This software is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY, to the extent permitted by law; without even the

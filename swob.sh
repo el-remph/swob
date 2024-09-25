@@ -3,9 +3,31 @@
 # SPDX-License-Identifier: FSFULLRWD
 
 wobfifo=${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/wob
+wobini= wobini_istemp=
 readonly wobfifo
-set -o pipefail -e	# `set -e' comes after readonly and pipefail, they
+set -o pipefail -efmu	# `set -e' comes after readonly and pipefail, they
 			# aren't vital enough to kill the script for
+
+set_wobini() {
+	for dir in ${XDG_CONFIG_HOME:+"$XDG_CONFIG_HOME"} ~/.config /etc; do
+		if test -r "$dir"/swob/wob.ini; then
+			wobini="$dir"/swob/wob.ini
+			return
+		fi
+	done
+
+	# fallthrough to default: temporary wob.ini(5) standin
+	echo >&2 "$0: warning: no swob/wob.ini found; defaulting to temporary"
+	wobini=`mktemp` wobini_istemp=1
+	cat >$wobini <<EOF
+[style.volume]
+background_color = 000000
+[style.mute]
+background_color = af0000
+[style.brightness]
+background_color = a89800
+EOF
+}
 
 start_wob() {
 	if test -e "$wobfifo"; then
@@ -18,34 +40,11 @@ start_wob() {
 	# or any other IPC or SHM system
 	mkfifo -m600 "$wobfifo"
 
-	default_wobini=
-	for dir in ${XDG_CONFIG_HOME:+"$XDG_CONFIG_HOME"} ~/.config /etc; do
-		if test -r "$dir"/wob/wob.ini; then
-			default_wobini="$dir"/wob/wob.ini
-			break
-		fi
-	done
+	set_wobini
 
-	# temporary wob.ini(5) file, to set wob colours
-	wobini=`mktemp`
-	{
-		# This order means that a user can change the styles in
-		# their own config if they like
-		printf '[style.mute]\nbackground_color = af0000\n\n'
-		cat - ${default_wobini:+"$default_wobini"} <<EOF
-[style.volume]
-background_color = 000000
-[style.mute]
-background_color = af0000
-[style.brightness]
-background_color = a89800
-
-EOF
-	} >$wobini
-
-	# spawn wob process with temporary files
+	# spawn wob process with temporary file(s)
 	(
-		trap 'rm "$wobini" "$wobfifo"' 0
+		trap 'rm "$wobfifo" ${wobini_istemp:+"$wobini"}' 0
 		# Don't `exec' wob here, else the trap won't work
 		wob -c "$wobini" -v <$wobfifo
 	) &
