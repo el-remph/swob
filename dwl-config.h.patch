@@ -1,0 +1,34 @@
+--- a/dwl-v0.5/config.h	2023-11-25 07:15:02.000000000 +0000
++++ b/dwl-v0.5/config.h	2024-10-07 03:23:12.420734304 +0100
+@@ -114,6 +118,18 @@
+ /* commands */
+ static const char *termcmd[] = { "foot", NULL };
+ static const char *menucmd[] = { "bemenu-run", NULL };
++
++static const char
++	swob[] = "swob.sh",
++	swob_up[] = "5%+",
++	swob_down[] = "5%-",
++	swob_vol[] = "volume",
++	swob_brt[] = "brightness",
++	*swob_vol_up[] = { swob, swob_vol, swob_up, NULL },
++	*swob_vol_down[] = { swob, swob_vol, swob_down, NULL },
++	*swob_vol_toggle[] = { swob, swob_vol, "toggle", NULL },
++	*swob_brt_up[] = { swob, swob_brt, swob_up, NULL },
++	*swob_brt_down[] = { swob, swob_brt, swob_down, NULL };
+ 
+ static const Key keys[] = {
+ 	/* Note that Shift changes certain key codes: c -> C, 2 -> at, etc. */
+@@ -160,6 +180,12 @@ static const Key keys[] = {
+ #define CHVT(n) { WLR_MODIFIER_CTRL|WLR_MODIFIER_ALT,XKB_KEY_XF86Switch_VT_##n, chvt, {.ui = (n)} }
+ 	CHVT(1), CHVT(2), CHVT(3), CHVT(4), CHVT(5), CHVT(6),
+ 	CHVT(7), CHVT(8), CHVT(9), CHVT(10), CHVT(11), CHVT(12),
++
++	{ 0, XKB_KEY_XF86MonBrightnessDown, spawn, {.v = swob_brt_down} },
++	{ 0, XKB_KEY_XF86MonBrightnessUp, spawn, {.v = swob_brt_up} },
++	{ 0, XKB_KEY_XF86AudioLowerVolume, spawn, {.v = swob_vol_down} },
++	{ 0, XKB_KEY_XF86AudioRaiseVolume, spawn, {.v = swob_vol_up} },
++	{ 0, XKB_KEY_XF86AudioMute, spawn, {.v = swob_vol_toggle} }
+ };
+ 
+ static const Button buttons[] = {

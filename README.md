@@ -28,13 +28,23 @@ Dependencies
 Installation
 ------------
 
-- Put swob.sh on your PATH, or edit the sway(5) config snippet to point to its
-  exact location.
-- Copy the sway config snippet into your own sway config file, or source it
-  from that file, or copy it into /etc/sway/config.d -- obviously if you
-  aren't on sway, do the equivalent for your window manager.
-- Copy swob-wob.ini to one of: `$XDG_CONFIG_DIR`/swob/wob.ini,
-  ~/.config/swob/wob.ini, /etc/swob/wob.ini
+<ul>
+<li>
+Configure your wayland compositor to bind the XF86 volume/brightness
+controls to swob.sh. Example configuration is provided for the following:
+<dl>
+<dt>Sway (options):</dt>
+<dd>Copy the sway config snippet into your own sway config file...</dd>
+<dd><em>Or</em> source it from that file...</dd>
+<dd><em>Or</em> copy it into /etc/sway/config.d</dd>
+<dt>dwl:</dt>
+<dd>An example patch for config.h is available at <a
+href="dwl-config.h.patch">dwl-config.h.patch</a></dd>
+</dl>
+</li>
+<li> Put swob.sh on your PATH, or your wayland compositor's config to point to
+     its exact location. </li>
+</ul>
 
 Copying
 -------

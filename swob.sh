@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: FSFULLRWD
 
 wobfifo=${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/wob
-wobini= wobini_istemp=
+wobini=
 readonly wobfifo
 set -o pipefail -efmu	# `set -e' comes after readonly and pipefail, they
 			# aren't vital enough to kill the script for
@@ -17,13 +17,16 @@ set_wobini() {
 	done
 
 	# fallthrough to default: temporary wob.ini(5) standin
-	echo >&2 "$0: warning: no swob/wob.ini found; defaulting to temporary"
-	wobini=`mktemp` wobini_istemp=1
+	wobini=${XDG_CONFIG_HOME:-~/.config}/swob/wob.ini
+	echo >&2 "$0: no swob/wob.ini found; writing default to $wobini"
+	mkdir -p "${wobini%/*}"
 	cat >$wobini <<EOF
 [style.volume]
 background_color = 000000
+
 [style.mute]
 background_color = af0000
+
 [style.brightness]
 background_color = a89800
 EOF
@@ -44,7 +47,7 @@ start_wob() {
 
 	# spawn wob process with temporary file(s)
 	(
-		trap 'rm "$wobfifo" ${wobini_istemp:+"$wobini"}' 0
+		trap 'rm "$wobfifo"' 0
 		# Don't `exec' wob here, else the trap won't work
 		wob -c "$wobini" -v <$wobfifo
 	) &
