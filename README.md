@@ -3,8 +3,9 @@ swob (sway+wob helper)
 
 This is a simple/stupid helper script and config files to provide volume and
 brightness controls under Wayland using [wob]. Sway is *not* mandatory (the
-helper script doesn't depend on sway or any wlroots features) but a sway
-config snippet is provided for convenience.
+helper script doesn't depend on sway or any wlroots features); the name is
+simply because sway was the first compositor I configured this for. Other
+compositor configurations are available; see [Installation](#installation).
 
 [wob]: https://github.com/francma/wob
 

@@ -5,18 +5,18 @@
 wobfifo=${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/wob
 wobini=
 readonly wobfifo
-set -o pipefail -efmu	# `set -e' comes after readonly and pipefail, they
-			# aren't vital enough to kill the script for
+# `set -e' comes after readonly, which isn't vital enough to kill the script for
+set ${BASH_VERSION:+-o pipefail} -efmu
 
 set_wobini() {
 	for dir in ${XDG_CONFIG_HOME:+"$XDG_CONFIG_HOME"} ~/.config /etc; do
 		if test -r "$dir"/swob/wob.ini; then
-			wobini="$dir"/swob/wob.ini
+			wobini=$dir/swob/wob.ini
 			return
 		fi
 	done
 
-	# fallthrough to default: temporary wob.ini(5) standin
+	# fine, I will make my own wob.ini(5)
 	wobini=${XDG_CONFIG_HOME:-~/.config}/swob/wob.ini
 	echo >&2 "$0: no swob/wob.ini found; writing default to $wobini"
 	mkdir -p "${wobini%/*}"
