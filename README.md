@@ -21,10 +21,18 @@ binary unnecessarily with every tap.
 Dependencies
 ------------
 
-- POSIX sh, sed and mkfifo(1); non-POSIX mktemp(1) (all pretty universally available)
+- POSIX sh, sed and mkfifo(1); non-POSIX mktemp(1) (all pretty universally
+  available)
+- logger(1) from [util-linux](https://www.kernel.org/pub/linux/utils/util-linux/)[^1]
 - [wob]
 - [amixer (from alsa-utils)](https://www.alsa-project.org)
 - [brightnessctl](https://github.com/Hummer12007/brightnessctl)
+
+[^1]:	current logger(1) usage is non-portable and other such implementations
+	are unlikely to work. This shouldn't be a problem for eg. BSD
+	logger(1) since Wayland and any audio control isn't portable there
+	either, so this is a very small caveat for those using busybox
+	logger on Linux
 
 Installation
 ------------

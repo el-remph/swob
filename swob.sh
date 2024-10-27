@@ -5,6 +5,32 @@
 set ${BASH_VERSION:+-o pipefail} -efmu
 wobfifo=$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY.swob
 wobini=
+pid=$$	# So log messages appear as coming from this process, rather than a
+	# a subprocess
+
+# setup logger(1) to take any stderr warnings from this program (eg. command
+# not found)
+syslog=`mktemp -u`
+mkfifo -m600 "$syslog"
+# logger(1) and exec must be in this order, else they'll deadlock
+logger -t swob -p user.warn -s --skip-empty --prio-prefix --id=$pid <$syslog &
+exec 2>$syslog
+rm "$syslog"	# unlink fifo; the file descriptor will remain open
+
+complain() {
+	case $1 in
+	emerg*)	prio=0 ;;
+	alert)	prio=1 ;;
+	crit*)	prio=2 ;;
+	err*)	prio=3 ;;
+	warn*)	prio=4 ;;
+	notice)	prio=5 ;;
+	info*)	prio=6 ;;
+	debug)	prio=7 ;;
+	esac
+	shift
+	printf >&2 '<%d>%s\n<4>\n' $prio "$*" # send message, then immediately reset syslog level to warn
+}
 
 set_wobini() {
 	for dir in ${XDG_CONFIG_HOME:+"$XDG_CONFIG_HOME"} ~/.config /etc; do
@@ -16,7 +42,7 @@ set_wobini() {
 
 	# fine, I will make my own wob.ini(5)
 	wobini=${XDG_CONFIG_HOME:-~/.config}/swob/wob.ini
-	echo >&2 "$0: no swob/wob.ini found; writing default to $wobini"
+	complain notice "no swob/wob.ini found; writing default to $wobini"
 	mkdir -p "${wobini%/*}"
 	cat >$wobini <<EOF
 [style.volume]
@@ -47,7 +73,12 @@ start_wob() {
 	(
 		trap 'rm "$wobfifo"' 0
 		# Don't `exec' wob here, else the trap won't work
-		wob -c "$wobini" -v <$wobfifo
+		# wob's kvetching gets redirected to debug priority instead
+		# of being allowed to fallthrough to the default logger(1),
+		# which sets priority to warn
+		wob -c "$wobini" -v <$wobfifo 2>&1 | while read REPLY; do
+			complain debug "$REPLY"
+		done
 	) &
 }
 
@@ -78,7 +109,7 @@ s/$/ volume/
 			brightnessctl -m set "$2" | sed -En 's/(.*[^0-9])?([0-9]+)%.*/\2 brightness/p'
 			;;
 		*)
-			echo >&2 "$0: error: unrecognised argument: $target"
+			complain error "unrecognised argument: $target"
 			exit -1
 			;;
 	esac
