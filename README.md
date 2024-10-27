@@ -21,12 +21,20 @@ binary unnecessarily with every tap.
 Dependencies
 ------------
 
-- POSIX sh, sed and mkfifo(1); non-POSIX mktemp(1) (all pretty universally available)
+- POSIX sh, sed and mkfifo(1); non-POSIX mktemp(1) (all pretty universally
+  available)
 - [wob]
-- For volume, at least one of:
-  - For ALSA, [amixer (from alsa-utils)](https://www.alsa-project.org)
-  - For Pipewire, [wireplumber and wpctl](https://pipewire.pages.freedesktop.org/wireplumber)
 - [brightnessctl](https://github.com/Hummer12007/brightnessctl)
+- For volume, at least one of:
+  - amixer, for [ALSA](https://www.alsa-project.org)
+  - [wireplumber and wpctl](https://pipewire.pages.freedesktop.org/wireplumber)
+    for pipewire
+  - pactl for [PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio)
+    - As with anything pertaining to Poettering, pactl doesn't play nice,
+      so the pactl backend is the slowest of the three: requires three calls
+      to pactl and two to sed, compared with two calls to wpctl and one to
+      amixer (each with only one call to sed). It is generally recommended to
+      use one of the other two wherever possible
 
 Installation
 ------------

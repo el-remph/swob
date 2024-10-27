@@ -53,29 +53,76 @@ start_wob() {
 	) &
 }
 
-# This doesn't make me happy
-have_pipewire() (
-	set +fu
-	test -n "$SWOB_WPCTL" && return 0
+glob_match() {
+	# MUST be called with set +f
+	test $# -gt 1 -o -e "$1"
+}
+
+get_audio_type() {
+	# MUST be called with set +fu
+
+	case $SWOB_AUDIO in
+	pipewire|pulse|alsa)	return ;;
+	'')	;;
+	*)	echo >&2 "$0: warning: unrecognised SWOB_AUDIO: $SWOB_AUDIO" ;;
+	esac
 
 	# could guess at /run/user/`id -u`, but let's not jump the gun here
 	rundir=${PIPEWIRE_RUNTIME_DIR:-$XDG_RUNTIME_DIR}
-	test -z "$rundir" && return 1
-	set -- "$rundir"/pipewire*
-	exec test $# -gt 1 -o -e "$1"
-)
+	if test -n "$rundir" && glob_match "$rundir"/pipewire*; then
+		SWOB_AUDIO=pipewire
+		return
+	fi
+
+	rundir=${PULSE_RUNTIME_PATH:-$XDG_RUNTIME_DIR}
+	if test -n "$rundir" && glob_match "$rundir"/pulse*; then
+		SWOB_AUDIO=pulse
+		return
+	fi
+
+	# default to ALSA
+	SWOB_AUDIO=alsa
+}
 
 set_vol() {
-	if have_pipewire; then
+	set +fu
+	get_audio_type
+	set -fu
+
+	case $SWOB_AUDIO in
+	pipewire)
 		case $1 in
-			toggle)	to_set=mute ;;
-			*)	to_set='volume -l 1.0' ;;
+		toggle)	to_set=mute ;;
+		*)	to_set='volume -l 1.0' ;;
 		esac
 		wpctl set-$to_set @DEFAULT_AUDIO_SINK@ "$1"
 		wpctl get-volume @DEFAULT_AUDIO_SINK@ | sed -E \
 			-e 's/^Volume: ([0-9]+)\.([0-9][0-9])/\1\2/'	\
 			-e 's/\[MUTED\]/mute/'
-	else
+		;;
+
+	pulse)
+		case $1 in
+		toggle)	to_set=mute ;;
+		*)	to_set=volume ;;
+		esac
+		pactl set-sink-$to_set @DEFAULT_SINK@ "$(echo "$1" | sed -E 's/(.*)([+-])$/\2\1/')"
+		percent=`pactl get-sink-volume @DEFAULT_SINK@ | sed -En 's/.* ([0-9]+)%.*/\1/p'`
+		mute_cmd='pactl get-sink-mute @DEFAULT_SINK@'
+		mute_out=`$mute_cmd`
+		case $mute_out in
+		'Mute: yes')	muted=1 ;;
+		'Mute: no')	muted= ;;
+		*)	echo >&2 "$0: warning: bad output from $mute_cmd: $mute_out" ;;
+		esac
+		echo "$percent ${muted:+mute}"
+		;;
+
+	*)
+		if test "$SWOB_AUDIO" != alsa; then
+			echo >&2 "$0: WARNING: internal inconsistency! SWOB_AUDIO: \`$SWOB_AUDIO'"
+		fi
+
 		amixer sset Master "$1" | sed -E '
 # Extract percentage, keep original line for later
 h
@@ -95,21 +142,22 @@ x
 # else
 g
 s/$/ volume/'
-	fi
+		;;
+	esac
 }
 
 do_cmd_get_percent() {
 	case $1 in
-		volume|vol)
-			set_vol "$2"
-			;;
-		brightness|brt)
-			brightnessctl -m set "$2" | sed -En 's/(.*[^0-9])?([0-9]+)%.*/\2 brightness/p'
-			;;
-		*)
-			echo >&2 "$0: error: unrecognised argument: $target"
-			exit -1
-			;;
+	volume|vol)
+		set_vol "$2"
+		;;
+	brightness|brt)
+		brightnessctl -m set "$2" | sed -En 's/(.*[^0-9])?([0-9]+)%.*/\2 brightness/p'
+		;;
+	*)
+		echo >&2 "$0: error: unrecognised argument: $target"
+		exit -1
+		;;
 	esac
 }
 

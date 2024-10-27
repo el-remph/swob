@@ -4,7 +4,8 @@ pkgrel=1
 pkgdesc='Volume and brightness controls for wayland, using wob'
 arch=(any) # limited only by dependencies
 depends=(sh coreutils sed wob alsa-utils brightnessctl)
-optdepends=('wireplumber: for pipewire support')
+optdepends=(	'wireplumber: wpctl, for pipewire support'
+		'libpulse: pactl, for pulseaudio support'	)
 url='https://github.com/el-remph/swob'
 license=(GPL-3.0-or-later)
 provides=(swob)
