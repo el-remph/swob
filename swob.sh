@@ -1,6 +1,6 @@
 #!/bin/sh
 # SPDX-FileCopyrightText:  2023-2024 The Remph <lhr@disroot.org>
-# SPDX-License-Identifier: FSFULLRWD
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 wobfifo=${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/wob
 wobini=
@@ -53,10 +53,30 @@ start_wob() {
 	) &
 }
 
-do_cmd_get_percent() {
-	case $1 in
-		volume|vol)
-			amixer sset Master "$2" | sed -E '
+# This doesn't make me happy
+have_pipewire() (
+	set +fu
+	test -n "$SWOB_WPCTL" && return 0
+
+	# could guess at /run/user/`id -u`, but let's not jump the gun here
+	rundir=${PIPEWIRE_RUNTIME_DIR:-$XDG_RUNTIME_DIR}
+	test -z "$rundir" && return 1
+	set -- "$rundir"/pipewire*
+	exec test $# -gt 1 -o -e "$1"
+)
+
+set_vol() {
+	if have_pipewire; then
+		case $1 in
+			toggle)	to_set=mute ;;
+			*)	to_set='volume -l 1.0' ;;
+		esac
+		wpctl set-$to_set @DEFAULT_AUDIO_SINK@ "$1"
+		wpctl get-volume @DEFAULT_AUDIO_SINK@ | sed -E \
+			-e 's/^Volume: ([0-9]+)\.([0-9][0-9])/\1\2/'	\
+			-e 's/\[MUTED\]/mute/'
+	else
+		amixer sset Master "$1" | sed -E '
 # Extract percentage, keep original line for later
 h
 s/.*\[([0-9]+)%\].*/\1/
@@ -74,8 +94,15 @@ x
 }
 # else
 g
-s/$/ volume/
-'		;;
+s/$/ volume/'
+	fi
+}
+
+do_cmd_get_percent() {
+	case $1 in
+		volume|vol)
+			set_vol "$2"
+			;;
 		brightness|brt)
 			brightnessctl -m set "$2" | sed -En 's/(.*[^0-9])?([0-9]+)%.*/\2 brightness/p'
 			;;
