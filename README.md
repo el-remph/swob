@@ -5,7 +5,7 @@ This is a simple/stupid helper script and config files to provide volume and
 brightness controls under Wayland using [wob]. Sway is *not* mandatory (the
 helper script doesn't depend on sway or any wlroots features); the name is
 simply because sway was the first compositor I configured this for. Other
-compositor configurations are available; see [Installation](#installation).
+compositor configurations are available; see [&sect;Installation](#installation).
 
 [wob]: https://github.com/francma/wob
 
@@ -52,10 +52,18 @@ Copying
 
 Copyright &copy; 2024 The Remph <lhr@disroot.org>
 
-These files are free software; the Remph gives unlimited permission to copy
-and/or distribute them, with or without modification, as long as this notice
-is preserved.
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option)
+any later version.
 
-This software is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
-implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+more details.
+
+A copy of the full GPL can be found at <https://www.gnu.org/licenses/GPL>.
+
+As an additional permission under GNU GPL version 3 section 7, the section 4
+requirement to distribute a copy of the GPL along with the work is waived,
+provided that the above notices are distributed intact instead.

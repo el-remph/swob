@@ -1,12 +1,10 @@
 #!/bin/sh
 # SPDX-FileCopyrightText:  2023-2024 The Remph <lhr@disroot.org>
-# SPDX-License-Identifier: FSFULLRWD
+# SPDX-License-Identifier: GPL-3.0-or-later
 
-wobfifo=${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/wob
-wobini=
-readonly wobfifo
-# `set -e' comes after readonly, which isn't vital enough to kill the script for
 set ${BASH_VERSION:+-o pipefail} -efmu
+wobfifo=$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY.swob
+wobini=
 
 set_wobini() {
 	for dir in ${XDG_CONFIG_HOME:+"$XDG_CONFIG_HOME"} ~/.config /etc; do
