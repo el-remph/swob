@@ -1,13 +1,13 @@
-#!/bin/sh
+#!/bin/bash
 # SPDX-FileCopyrightText:  2023-2024 The Remph <lhr@disroot.org>
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-wobfifo=${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/wob
-wobini=
-readonly wobfifo
-# `set -e' comes after readonly, which isn't vital enough to kill the script for
+# For the benefit of runit logging
+exec 2>&1
+
 set ${BASH_VERSION:+-o pipefail} -efmu
 
+wobini=
 set_wobini() {
 	for dir in ${XDG_CONFIG_HOME:+"$XDG_CONFIG_HOME"} ~/.config /etc; do
 		if test -r "$dir"/swob/wob.ini; then
@@ -30,27 +30,6 @@ background_color = af0000
 [style.brightness]
 background_color = a89800
 EOF
-}
-
-start_wob() {
-	if test -e "$wobfifo"; then
-		return	# Already started
-	fi
-
-	# temporary fifo (call mkfifo(1) asap to minimise possibility of races)
-	# TODO: should this be in C, so we can call mkfifo(2) and check for
-	# EEXIST, rather than using test(1)? Alternatively, there is flock(1),
-	# or any other IPC or SHM system
-	mkfifo -m600 "$wobfifo"
-
-	set_wobini
-
-	# spawn wob process with temporary file(s)
-	(
-		trap 'rm "$wobfifo"' 0
-		# Don't `exec' wob here, else the trap won't work
-		wob -c "$wobini" -v <$wobfifo
-	) &
 }
 
 glob_match() {
@@ -155,7 +134,7 @@ do_cmd_get_percent() {
 		brightnessctl -m set "$2" | sed -En 's/(.*[^0-9])?([0-9]+)%.*/\2 brightness/p'
 		;;
 	*)
-		echo >&2 "$0: error: unrecognised argument: $target"
+		echo >&2 "$0: error: unrecognised argument: $1"
 		exit -1
 		;;
 	esac
@@ -163,22 +142,32 @@ do_cmd_get_percent() {
 
 ## MAIN ##
 
-start_wob
+set_wobini
 
-{
-	do_cmd_get_percent "$@"
-	sleep 3	# Needs to be long enough that there aren't too many wob(1)
-		# processes spawned and respawned consecutively on repeated
-		# taps, but short enough that there aren't too many /bin/sh
-		# processes hanging around simultaneously running sleep(1)
-		# from this script! 3 seconds is an uneducated guess.
-} >$wobfifo
+# Timeout needs to be long enough that there aren't too many wob(1)
+# processes spawned and respawned consecutively on repeated taps,
+# but short enough that there aren't too many /bin/sh processes hanging
+# around simultaneously running sleep(1) from this script! 3 seconds is an
+# uneducated guess.
+timeout=3
 
-# Don't let wob die if it's still receiving input from another process; wait
-# until it says it's finished
-# To solve the above mentioned problem of too many /bin/sh processes hanging
-# around, we could setsid(1) wob so the script can exit without waiting as
-# soon as it's done sleeping (the existing situation is that as long as one
-# script sleeps, the shell that spawned the wob process will wait until that
-# sleep is done)
-test -z $! || wait $!
+wobfifo=$XDG_RUNTIME_DIR/wob
+mkfifo -m 0600 "$wobfifo"
+trap 'rm "$wobfifo"' 0
+
+# horrifying, but totally POSIX-kosher
+tail -c +1 -f "$wobfifo" | {
+	# FIXME: read -t is a bashism! Also doesn't work
+	while read -t $timeout; do
+		set -- $REPLY # word split
+		if test $# -ne 2; then
+			echo >&2 "$0: error: wrong number of arguments: $#"
+			continue
+		fi
+		do_cmd_get_percent "$@"
+	done
+
+	# Let the rest of the timeout play out (this would be far more
+	# sophisticated in C but w/e)
+	sleep $timeout
+} | wob -c "$wobini" -v

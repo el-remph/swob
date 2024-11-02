@@ -1,3 +1,13 @@
+This is a branch of swob where the rendezvous with the listener and loggging
+are handled by your neighbourhood user service manager. User services are
+supported by (if you must) systemd, s6, runit and dinit; swob currently
+supports runit.
+
+The runit version is a '''working''' mockup, but initialisation of the
+one-time service is too slow.
+
+-------------------------------------------------------------------------------
+
 swob (sway+wob helper)
 ======================
 
