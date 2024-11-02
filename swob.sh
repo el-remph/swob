@@ -58,6 +58,15 @@ glob_match() {
 	test $# -gt 1 -o -e "$1"
 }
 
+select_audio() {
+	# could guess at /run/user/`id -u`, but let's not jump the gun here
+	sound_sys=$1 rundir=${2:-$XDG_RUNTIME_DIR} tool=$3
+	test -n "$rundir"	&&
+		glob_match "$rundir/$sound_sys"*	&&
+		command -v "$tool" >/dev/null 2>&1	&&
+		SWOB_AUDIO=$sound_sys
+}
+
 get_audio_type() {
 	# MUST be called with set +fu
 
@@ -67,21 +76,9 @@ get_audio_type() {
 	*)	echo >&2 "$0: warning: unrecognised SWOB_AUDIO: $SWOB_AUDIO" ;;
 	esac
 
-	# could guess at /run/user/`id -u`, but let's not jump the gun here
-	rundir=${PIPEWIRE_RUNTIME_DIR:-$XDG_RUNTIME_DIR}
-	if test -n "$rundir" && glob_match "$rundir"/pipewire*; then
-		SWOB_AUDIO=pipewire
-		return
-	fi
-
-	rundir=${PULSE_RUNTIME_PATH:-$XDG_RUNTIME_DIR}
-	if test -n "$rundir" && glob_match "$rundir"/pulse*; then
-		SWOB_AUDIO=pulse
-		return
-	fi
-
-	# default to ALSA
-	SWOB_AUDIO=alsa
+	select_audio pipewire	"$PIPEWIRE_RUNTIME_DIR"	wpctl	&& return
+	select_audio pulse	"$PULSE_RUNTIME_PATH"	pactl	&& return
+	SWOB_AUDIO=alsa # default to ALSA
 }
 
 set_vol() {
