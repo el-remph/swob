@@ -1,5 +1,5 @@
-bindsym --locked XF86MonBrightnessDown	exec swobctl.sh brightness 5%-
-bindsym --locked XF86MonBrightnessUp	exec swobctl.sh brightness 5%+
-bindsym --locked XF86AudioLowerVolume	exec swobctl.sh volume 5%-
-bindsym --locked XF86AudioRaiseVolume	exec swobctl.sh volume 5%+
-bindsym --locked XF86AudioMute		exec swobctl.sh volume toggle
+bindsym --locked XF86MonBrightnessDown	exec exec swobctl.sh brightness 5%-
+bindsym --locked XF86MonBrightnessUp	exec exec swobctl.sh brightness 5%+
+bindsym --locked XF86AudioLowerVolume	exec exec swobctl.sh volume 5%-
+bindsym --locked XF86AudioRaiseVolume	exec exec swobctl.sh volume 5%+
+bindsym --locked XF86AudioMute		exec exec swobctl.sh volume toggle

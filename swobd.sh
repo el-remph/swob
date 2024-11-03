@@ -142,6 +142,14 @@ do_cmd_get_percent() {
 
 ## MAIN ##
 
+# If not already made by the caller (which it should have been), make fifo
+# ASAP, so the caller can write to it and not fail (or worse, creat(2) a
+# regular file by accident, although this would be their own fault for not
+# checking)
+wobfifo=$XDG_RUNTIME_DIR/wob
+test -p "$wobfifo" || mkfifo -m 0600 "$wobfifo" # possible race between these two
+trap 'rm "$wobfifo"' 0
+
 set_wobini
 
 # Timeout needs to be long enough that there aren't too many wob(1)
@@ -150,10 +158,6 @@ set_wobini
 # around simultaneously running sleep(1) from this script! 3 seconds is an
 # uneducated guess.
 timeout=3
-
-wobfifo=$XDG_RUNTIME_DIR/wob
-mkfifo -m 0600 "$wobfifo"
-trap 'rm "$wobfifo"' 0
 
 # horrifying, but totally POSIX-kosher
 tail -c +1 -f "$wobfifo" | {
@@ -167,7 +171,5 @@ tail -c +1 -f "$wobfifo" | {
 		do_cmd_get_percent "$@"
 	done
 
-	# Let the rest of the timeout play out (this would be far more
-	# sophisticated in C but w/e)
-	sleep $timeout
+	exit # necessary else the other processes in the pipeline will shamble on
 } | wob -c "$wobini" -v

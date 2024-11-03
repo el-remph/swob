@@ -1,17 +1,23 @@
 #!/bin/sh
 set -efu # +m
 
-if test $# -ne 2; then
-	echo >&2 "$0: error: wrong number of arguments: $#"
+die() {
+	echo >&2 "$0: $*"
 	exit 1
-fi
+}
 
-SVDIR=${SVDIR-~/.runit/runsvdir/current} sv -v once swob
+
+test $# -eq 2 || die "error: wrong number of arguments: $#"
 
 wobfifo=$XDG_RUNTIME_DIR/wob
-if test ! -p "$wobfifo"; then
-	echo >&2 "$0: no such FIFO"
-	exit 1
+test -p "$wobfifo" || mkfifo -m600 "$wobfifo" # possible race between these two
+
+if test -n "${SVDIR-}"; then
+	sv -v once swob
+elif test -n "${DINIT_SOCKET_PATH-}" -o -S "$XDG_RUNTIME_DIR"/dinitctl -o -S ~/.dinitctl; then
+	dinitctl start swob
+else
+	die "$0: No service manager found"
 fi
 
 exec 3>$wobfifo

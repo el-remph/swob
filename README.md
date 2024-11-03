@@ -1,10 +1,16 @@
 This is a branch of swob where the rendezvous with the listener and loggging
 are handled by your neighbourhood user service manager. User services are
-supported by (if you must) systemd, s6, runit and dinit; swob currently
-supports runit.
+supported by (if you must) systemd, [s6], [runit] and [dinit]; swob currently
+supports:
 
-The runit version is a '''working''' mockup, but initialisation of the
-one-time service is too slow.
+- [runit version](service/sv) is a '''working''' mockup, but initialisation
+  of the one-time service is too slow.
+- [dinit version](service/dinit.d) also works, although logging is TODO. Its
+  initialisation is much faster, but still not as fast as I'd like.
+
+[s6]: https://skarnet.org/software/s6/
+[runit]: https://smarden.org/runit/
+[dinit]: https://davmac.org/projects/dinit/
 
 -------------------------------------------------------------------------------
 

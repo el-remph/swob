@@ -1,4 +1,7 @@
 #!/bin/sh
+# This script is pretty bad. The first part assumes user is root, but then
+# the services bit assumes the user is a regular user, and is also no good
+# for eg. PKGBUILD use
 set -exuf +m
 
 : "${DESTDIR:=}"
@@ -16,3 +19,25 @@ mkdir "$SV" # not -p; you should already have user services set up
 ln -s "$SV"/run /usr/bin/swobd.sh
 touch "$SV"/down
 ln -s "$SV"/supervise "$XDG_RUNTIME_DIR"/supervise.swob/
+
+dinit_usersvc_install() {
+	# see dinit(8) section FILES
+	for i in	\
+		${DINIT_PREFIX:+"$DINIT_PREFIX"/dinit.d}	\
+		${XDG_CONFIG_HOME:+"$XDG_CONFIG_HOME"/dinit.d}	\
+		~/.config/dinit.d}	\
+		/etc/dinit.d/user	\
+		/usr/lib/dinit.d/user	\
+		/usr/local/lib/dinit.d/user
+	do
+		if test -d "$i"; then
+			install -m 644 -t "$i" service/dinit.d/swob
+			return
+		fi
+	done
+
+	echo >&2 "$0: error: No dinit directory found"
+	return 1
+}
+
+dinit_usersvc_install
