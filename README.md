@@ -12,6 +12,15 @@ supports:
 [runit]: https://smarden.org/runit/
 [dinit]: https://davmac.org/projects/dinit/
 
+swobd.sh depends on either GNU bash or timeout(1) (originated from GNU
+coreutils; available in \*BSD but *not* in a busybox userland such as that
+of Alpine). This is to time out when user is done keysmashing. It contains
+a pretty unpleasant hack where it start with /bin/sh, then execs into bash
+if bash is not /bin/sh, but is available. Beware that the POSIX-compliant
+implementation of the timeout is not pretty at all. For a speedup either
+way, if you are certain about whether or not bash will be available, then
+remove the test for `command -V bash`, and edit the hashbang if applicable.
+
 -------------------------------------------------------------------------------
 
 swob (sway+wob helper)

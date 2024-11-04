@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # SPDX-FileCopyrightText:  2023-2024 The Remph <lhr@disroot.org>
 # SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -6,6 +6,19 @@
 exec 2>&1
 
 set ${BASH_VERSION:+-o pipefail} -efmu
+
+# After much deliberation, I have decided that making the hashbang /bin/sh,
+# *then* opportunistically `upgrading' to bash if available, is the only
+# option that compromises on neither portability nor performance (that is,
+# by avoiding the mank `timeout 3 head -1' thing). See top of README.md for
+# more details. Remove this test if you know for sure whether or not you'll
+# have bash, and edit the hashbang (or not) accordingly.
+#
+# A possible alternative would be testing command -V timeout, and bashing
+# if that doesn't work. But just because we can use timeout, should we?
+if test -z "${BASH_VERSION-}" && command -V bash; then
+	exec bash "$0" "$@"
+fi
 
 wobini=
 set_wobini() {
@@ -159,10 +172,16 @@ set_wobini
 # uneducated guess.
 timeout=3
 
+if test -n "${BASH_VERSION-}"; then
+	read_timeout() { read -t $timeout ; }
+else
+	# this is even worse than the tail(1) hack below
+	read_timeout() { REPLY=`timeout $timeout head -1` ; }
+fi
+
 # horrifying, but totally POSIX-kosher
 tail -c +1 -f "$wobfifo" | {
-	# FIXME: read -t is a bashism! Also doesn't work
-	while read -t $timeout; do
+	while read_timeout; do
 		set -- $REPLY # word split
 		if test $# -ne 2; then
 			echo >&2 "$0: error: wrong number of arguments: $#"
