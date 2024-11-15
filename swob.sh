@@ -2,11 +2,9 @@
 # SPDX-FileCopyrightText:  2023-2024 The Remph <lhr@disroot.org>
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-wobfifo=${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/wob
+set ${BASH_VERSION:+-o pipefail} -efu
+wobfifo=$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY.swob
 wobini=
-readonly wobfifo
-# `set -e' comes after readonly, which isn't vital enough to kill the script for
-set ${BASH_VERSION:+-o pipefail} -efmu
 
 set_wobini() {
 	for dir in ${XDG_CONFIG_HOME:+"$XDG_CONFIG_HOME"} ~/.config /etc; do
@@ -46,11 +44,11 @@ start_wob() {
 	set_wobini
 
 	# spawn wob process with temporary file(s)
-	(
+	{
 		trap 'rm "$wobfifo"' 0
 		# Don't `exec' wob here, else the trap won't work
-		wob -c "$wobini" -v <$wobfifo
-	) &
+		wob -c "$wobini" <$wobfifo
+	} &
 }
 
 glob_match() {
@@ -178,4 +176,4 @@ start_wob
 # soon as it's done sleeping (the existing situation is that as long as one
 # script sleeps, the shell that spawned the wob process will wait until that
 # sleep is done)
-test -z $! || wait $!
+test -z ${!-} || wait $! # surprisingly, $! could be unset (not just zero-length)
