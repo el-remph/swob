@@ -70,7 +70,7 @@ start_wob() {
 	set_wobini
 
 	# spawn wob process with temporary file(s)
-	(
+	{
 		trap 'rm "$wobfifo"' 0
 		# Don't `exec' wob here, else the trap won't work
 		# wob's kvetching gets redirected to debug priority instead
@@ -79,7 +79,7 @@ start_wob() {
 		wob -c "$wobini" -v <$wobfifo 2>&1 | while read REPLY; do
 			complain debug "$REPLY"
 		done
-	) &
+	} &
 }
 
 do_cmd_get_percent() {
@@ -135,4 +135,9 @@ start_wob
 # soon as it's done sleeping (the existing situation is that as long as one
 # script sleeps, the shell that spawned the wob process will wait until that
 # sleep is done)
-test -z $! || wait $!
+#
+# $wobini is tested because it's null-init'd, then only set if start_wob
+# doesn't short-circuit. Works in dash but not bash, because of how they name
+# jobspecs:
+#	if jobs %trap >/dev/null; then wait %trap; fi
+test -z "$wobini" || wait $!
