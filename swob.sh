@@ -7,7 +7,7 @@ wobfifo=$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY.swob
 wobini=
 
 set_wobini() {
-	for dir in ${XDG_CONFIG_HOME:+"$XDG_CONFIG_HOME"} ~/.config /etc; do
+	for dir in ${XDG_CONFIG_HOME:+"$XDG_CONFIG_HOME"} ~/.config /etc "${0%/*}"/../etc; do
 		if test -r "$dir"/swob/wob.ini; then
 			wobini=$dir/swob/wob.ini
 			return
