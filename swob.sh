@@ -4,16 +4,24 @@
 
 set ${BASH_VERSION:+-o pipefail} -efu
 wobfifo=$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY.swob
-wobini=
+wobini= SWOB_AUDIO=
 
-set_wobini() {
+scan_confdirs() {
 	for dir in ${XDG_CONFIG_HOME:+"$XDG_CONFIG_HOME"} ~/.config /etc "${0%/*}"/../etc; do
-		if test -r "$dir"/swob/wob.ini; then
+		test -d "$dir"/swob || continue
+		if test -z "$wobini" -a -r "$dir"/swob/wob.ini; then
 			wobini=$dir/swob/wob.ini
+		fi
+		if test -z "$SWOB_AUDIO" -a -r "$dir"/swob/audio; then
+			SWOB_AUDIO=`cat "$dir"/swob/audio`
+		fi
+		if test -n "$wobini" -a -n "$SWOB_AUDIO"; then
 			return
 		fi
 	done
+}
 
+new_wobini() {
 	# fine, I will make my own wob.ini(5)
 	wobini=${XDG_CONFIG_HOME:-~/.config}/swob/wob.ini
 	echo >&2 "$0: no swob/wob.ini found; writing default to $wobini"
@@ -41,7 +49,7 @@ start_wob() {
 	# or any other IPC or SHM system
 	mkfifo -m600 "$wobfifo"
 
-	set_wobini
+	test -n "$wobini" || new_wobini
 
 	# spawn wob process with temporary file(s)
 	{
@@ -158,6 +166,7 @@ do_cmd_get_percent() {
 
 ## MAIN ##
 
+scan_confdirs
 start_wob
 
 {
