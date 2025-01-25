@@ -6,7 +6,7 @@ arch=(any) # limited only by dependencies
 depends=(sh coreutils sed wob alsa-utils brightnessctl)
 optdepends=(	'wireplumber: wpctl, for pipewire support'
 		'libpulse: pactl, for pulseaudio support'	)
-url='https://github.com/el-remph/swob'
+url='https://git.sr.ht/~remph/swob'
 license=(GPL-3.0-or-later)
 provides=(swob)
 source=("git+$url")
