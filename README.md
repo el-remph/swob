@@ -53,14 +53,14 @@ controls to swob.sh. Example configuration is provided for the following:
 href="dwl-config.h.patch">dwl-config.h.patch</a></dd>
 </dl>
 </li>
-<li> Put swob.sh on your PATH, or your wayland compositor's config to point to
-     its exact location. </li>
+<li> Put swob.sh on your PATH, or set your wayland compositor's config to
+     point to its absolute location. </li>
 </ul>
 
 Copying
 -------
 
-Copyright &copy; 2024 The Remph <lhr@disroot.org>
+Copyright &copy; 2023-2025 The Remph <lhr@disroot.org>
 
 This program is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -73,7 +73,3 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
 more details.
 
 A copy of the full GPL can be found at <https://www.gnu.org/licenses/GPL>.
-
-As an additional permission under GNU GPL version 3 section 7, the section 4
-requirement to distribute a copy of the GPL along with the work is waived,
-provided that the above notices are distributed intact instead.

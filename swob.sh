@@ -1,10 +1,18 @@
 #!/bin/sh
-# SPDX-FileCopyrightText:  2023-2024 The Remph <lhr@disroot.org>
+# SPDX-FileCopyrightText:  2023-2025 The Remph <lhr@disroot.org>
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 set ${BASH_VERSION:+-o pipefail} -efu
-wobfifo=$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY.swob
-wobini= SWOB_AUDIO=
+
+# $wobdir is a `wrapper' directory that prevents a race between `test -p
+# $wobfifo` and `>$wobfifo', during which $wobfifo can be removed, causing
+# it to be created again as a regular file. If the removal also removes the
+# parent directory $wobdir, then sh's > operator can't creat(2). Of course,
+# the race could still happen between removing $wobfifo and $wobdir, but
+# this is less likely.
+wobdir=$XDG_RUNTIME_DIR/swob.$WAYLAND_DISPLAY
+
+wobfifo=$wobdir/pipe wobini= SWOB_AUDIO=
 
 scan_confdirs() {
 	for dir in ${XDG_CONFIG_HOME:+"$XDG_CONFIG_HOME"} ~/.config /etc "${0%/*}"/../etc; do
@@ -39,21 +47,21 @@ EOF
 }
 
 start_wob() {
-	if test -e "$wobfifo"; then
+	if test -p "$wobfifo"; then
 		return	# Already started
 	fi
 
+	rm -rf "$wobdir" # clear the decks
+
 	# temporary fifo (call mkfifo(1) asap to minimise possibility of races)
-	# TODO: should this be in C, so we can call mkfifo(2) and check for
-	# EEXIST, rather than using test(1)? Alternatively, there is flock(1),
-	# or any other IPC or SHM system
+	mkdir "$wobdir"
 	mkfifo -m600 "$wobfifo"
 
 	test -n "$wobini" || new_wobini
 
 	# spawn wob process with temporary file(s)
 	{
-		trap 'rm "$wobfifo"' 0
+		trap 'rm -r "$wobdir"' 0
 		# Don't `exec' wob here, else the trap won't work
 		wob -c "$wobini" <$wobfifo
 	} &
@@ -138,12 +146,12 @@ d
 x
 # Test if audio is muted
 /\[off\]/ {
-	g
+	x
 	s/$/ mute/
 	b
 }
 # else
-g
+x
 s/$/ volume/'
 		;;
 	esac
